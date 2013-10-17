@@ -1,0 +1,80 @@
+<html>
+  <head>
+    <style>
+      div {
+        max-width: 800px;
+        min-width: 400px;
+      }
+      video {
+        width: 100%;
+      }
+      img {
+        width: 307px; height: 250px;
+      }
+      canvas { width: 307px; height: 250px; }
+    </style>
+    <script src="/js/whammy.js"></script>
+  </head>
+
+  <body>
+
+    <div><video autoplay></video></div>
+    <!-- <div><img src=""></div> -->
+    <canvas style="display:none;"></canvas>
+
+    <script>
+    navigator.getMedia = ( navigator.getUserMedia ||
+                       navigator.webkitGetUserMedia ||
+                       navigator.mozGetUserMedia ||
+                       navigator.msGetUserMedia);
+
+  var rafId;
+  var frames = [];
+  var video = document.querySelector('video');
+  var canvas = document.querySelector('canvas');
+  var ctx = canvas.getContext('2d');
+  var localMediaStream = null;
+
+  function drawVideoFrame(time) {
+    rafId = requestAnimationFrame(drawVideoFrame);
+    ctx.drawImage(video, 0, 0, 307, 200);
+    console.log("Saving Frame");
+    frames.push(canvas.toDataURL('image/webp', 1));
+  };
+
+  rafId = requestAnimationFrame(drawVideoFrame);
+
+  function snapshot() {
+    if (localMediaStream) {
+      var width = 300;
+      var height = 207 * 1066 / 1596;
+      // For some reason this will only take a corner (the video image needs to be resize)
+      // ctx.drawImage(video, 0,0);
+      ctx.drawImage(video, 0,0, width,height);
+      document.querySelector('img').src = canvas.toDataURL('image/webp');
+    }
+  }
+
+  function stop() {
+    cancelAnimationFrame(rafId);  // Note: not using vendor prefixes!
+    // 2nd param: framerate for the video file.
+    var webmBlob = Whammy.fromImageArray(frames, 1000 / 24);
+    console.log("Creating Blob");
+
+    var video = document.createElement('video');
+    video.setAttribute("controls");
+    video.src = window.URL.createObjectURL(webmBlob);
+
+    document.body.appendChild(video);
+  }
+
+  video.addEventListener('click', stop, false);
+
+
+  navigator.getMedia({video: true, audio: true}, function(stream) {
+    video.src = window.URL.createObjectURL(stream);
+    localMediaStream = stream;
+  }, function() { console.log("Failed")});
+    </script>
+  </body>
+</html>
