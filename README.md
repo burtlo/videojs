@@ -1,4 +1,5 @@
 
+## HTML5 Resources
 
 * https://github.com/antimatter15/whammy
 * https://github.com/mattdiamond/Recorderjs
@@ -10,4 +11,6 @@
 * http://www.html5rocks.com/en/tutorials/getusermedia/intro/
 * https://github.com/cwilso/Audio-Input-Effects
 
-* https://code.google.com/p/chromium/issues/detail?id=113676
+
+* https://github.com/muaz-khan/WebRTC-Experiment/tree/master/RecordRTC
+* https://github.com/jwagener/recorder.js/
