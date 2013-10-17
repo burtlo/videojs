@@ -14,12 +14,16 @@
       canvas { width: 307px; height: 250px; }
     </style>
     <script src="/js/whammy.js"></script>
+    <script src="/js/recorder.js"></script>
   </head>
 
   <body>
 
+    <button id="start-recording" onclick="startRecording()">Record</button>
+    <button id="stop-recording" onclick="stopRecording()">Stop</button>
+    <button id="play-recording" onclick="play()">Play</button>
+
     <div><video autoplay></video></div>
-    <!-- <div><img src=""></div> -->
     <canvas style="display:none;"></canvas>
 
     <script>
@@ -42,8 +46,6 @@
     frames.push(canvas.toDataURL('image/webp', 1));
   };
 
-  rafId = requestAnimationFrame(drawVideoFrame);
-
   function snapshot() {
     if (localMediaStream) {
       var width = 300;
@@ -55,26 +57,70 @@
     }
   }
 
-  function stop() {
+  var captureStreamSuccessful = function(stream) {
+    rafId = requestAnimationFrame(drawVideoFrame);
+
+    video.src = window.URL.createObjectURL(stream);
+    localMediaStream = stream;
+
+    var context = new webkitAudioContext();
+    var mediaStreamSource = context.createMediaStreamSource(stream);
+    recorder = new Recorder(mediaStreamSource);
+    recorder.record();
+  }
+
+  function startRecording() {
+    console.log("Staring To Record")
+    navigator.getMedia({video: true, audio: true}, captureStreamSuccessful,function() {
+      console.log("Failed")
+    });
+  }
+
+  function stopRecording() {
+    stopRecordingAudio();
+    stopRecordingVideo();
+    document.querySelector('div').removeChild(video);
+  }
+
+  function stopRecordingAudio() {
+    console.log("Saving Audio");
+    recorder.stop();
+
+    var audio = document.createElement('audio');
+    audio.setAttribute("controls");
+    // audio.setAttribute("autoplay");
+    document.body.appendChild(audio);
+
+    recorder.exportWAV(function(stream) {
+      audio.src = window.URL.createObjectURL(stream);
+    });
+  }
+
+  function stopRecordingVideo() {
+    console.log("Saving Video");
+
     cancelAnimationFrame(rafId);  // Note: not using vendor prefixes!
     // 2nd param: framerate for the video file.
-    var webmBlob = Whammy.fromImageArray(frames, 1000 / 24);
+    var webmBlob = Whammy.fromImageArray(frames, 1000 / 16);
     console.log("Creating Blob");
 
     var video = document.createElement('video');
     video.setAttribute("controls");
+    // video.setAttribute("autoplay");
     video.src = window.URL.createObjectURL(webmBlob);
 
     document.body.appendChild(video);
   }
 
-  video.addEventListener('click', stop, false);
+  function play() {
+    var audio = document.querySelector('audio');
+    var video = document.querySelector('video');
+    audio.play();
+    video.play();
+    // audio.setAttribute("autoplay");
+    // video.setAttribute("autoplay");
+  }
 
-
-  navigator.getMedia({video: true, audio: true}, function(stream) {
-    video.src = window.URL.createObjectURL(stream);
-    localMediaStream = stream;
-  }, function() { console.log("Failed")});
-    </script>
+ </script>
   </body>
 </html>
